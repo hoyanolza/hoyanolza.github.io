@@ -104,11 +104,11 @@ analytics:
 
 # Site Author
 author:
-  name             : "Your Name"
+  name             : "John Kim"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "I am an **amazing** person."
-  location         : "Somewhere"
-  email            :
+  bio              : "This is a pseudo site for John Kim"
+  location         : "Seoul, Republic of Korea"
+  email            : "pseudo-account@outlook.com"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
