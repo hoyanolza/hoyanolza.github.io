@@ -1,4 +1,25 @@
+Data preprocessing is an indispensable step in data analysis. Unlike the textbook cases, real world data need an additional transformation and manipulation prior to actually performing the analysis.
+
+In this post, I am going to showcase how I used **Python** and **Pandas Package** to tidy up the data obtained from `kbland.kr` , a leading financial institution that provides information about the real estate market. 
+
+Codes were referenced from the book `파이썬을 활용한 부동산 데이터 분석 by 박준규`. Bit of adjustments were made to distinguish the code I have written down with the author's original code.
+
+## Download the web data
+
+`kbland.kr` provides various types of data. The primary data to be used in this post will the monthly data, which can be downloaded as shown below.
+
+<img src="../images/2022-10-02-data_preprocessing/image-20221003124810084.png" alt="image-20221003124810084" style="zoom:50%;" />
+
+
+
 ## Import necessary packages
+
+In this post `pandas` and `xlwings` will be used to perform our data preprocessing steps. Pandas is a well know package that allows users to manipulate data in a spreadsheet-like table format. While pandas provides methods to import data source in various types, I have found out  `xlwings` package to be much more useful when manipulating excel format data in Python.
+
+For more information visit the official documentation for both pandas and xlwings
+
+* https://pandas.pydata.org/docs/index.html
+* https://docs.xlwings.org/en/stable/
 
 
 ```python
@@ -6,10 +27,15 @@ import pandas as pd
 import xlwings as xw
 ```
 
-## Loading the data
-- using xlwings package
-- manipulate excel data (read & write) using xlwings packages
-- for more information refer to the official document `docs.xlwings.org/`
+For better readability in Jupyter Notebook, display options were adjusted as below. 
+
+```python
+pd.options.display.float_format = '{:.2f}'.format
+```
+
+
+
+## Load the data
 
 
 ```python
@@ -21,40 +47,16 @@ sheet = wb.sheets['1.매매종합']
 
 ```python
 row_num = sheet.range(1,1).end('down').end('down').end('down').row
-print(row_num)
-```
-
-    449
-    
-
-
-```python
 data_range = 'A2:GE' + str(row_num)
 print(data_range)
 ```
 
     A2:GE449
-    
-
-## converting excel file into python pandas dataframe
-- use options(pd.DataFrame) converter
 
 
 ```python
 raw_data = sheet[data_range].options(pd.DataFrame, index=False, header = True).value
-raw_data.info()
-```
-
-    <class 'pandas.core.frame.DataFrame'>
-    RangeIndex: 447 entries, 0 to 446
-    Columns: 187 entries, 구분 to 기타지방
-    dtypes: object(187)
-    memory usage: 653.2+ KB
-    
-
-
-```python
-raw_data.head()
+raw_data.head(2)
 ```
 
 
@@ -66,14 +68,17 @@ raw_data.head()
         vertical-align: middle;
     }
 
+
     .dataframe tbody tr th {
         vertical-align: top;
     }
-
+    
     .dataframe thead th {
         text-align: right;
     }
+
 </style>
+
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -150,241 +155,40 @@ raw_data.head()
       <td>Jeju/\nSeogwipo</td>
       <td>Non-Metropolitan Area</td>
     </tr>
-    <tr>
-      <th>2</th>
-      <td>86.1</td>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.594416</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2.0</td>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>3.0</td>
-      <td>27.723591</td>
-      <td>23.440488</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
   </tbody>
 </table>
-<p>5 rows × 187 columns</p>
+<p>2 rows × 187 columns</p>
+
 </div>
 
-
-
-- The first row and the column name should be merged in the ETL process
-- the second row, which is the English name of the corresponding region should be dropped for better readability
-- irrelevant rows should be dropped (the last 4 rows)
+The last 4 rows, which is irrelevant to our data analysis, will be dropped.
 
 
 ```python
-raw_data.tail(4)
+raw_data['구분'].tail(4)
+```
+
+```
+443    『데이터허브』에서 KB부동산 통계를 편리하게 이용하세요
+444                KB부동산 > 메뉴 > 데이터허브
+445                             데이터허브
+446                            주택가격동향
+Name: 구분, dtype: object
 ```
 
 
 
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>구분</th>
-      <th>전국</th>
-      <th>서울</th>
-      <th>강북\n14개구</th>
-      <th>None</th>
-      <th>None</th>
-      <th>None</th>
-      <th>None</th>
-      <th>None</th>
-      <th>None</th>
-      <th>...</th>
-      <th>None</th>
-      <th>None</th>
-      <th>양산</th>
-      <th>거제</th>
-      <th>진주</th>
-      <th>김해</th>
-      <th>통영</th>
-      <th>제주도</th>
-      <th>제주/\n서귀포</th>
-      <th>기타지방</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>443</th>
-      <td>『데이터허브』에서 KB부동산 통계를 편리하게 이용하세요</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>444</th>
-      <td>KB부동산 &gt; 메뉴 &gt; 데이터허브</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>445</th>
-      <td>데이터허브</td>
-      <td>None</td>
-      <td>https://data.kbland.kr/</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>446</th>
-      <td>주택가격동향</td>
-      <td>None</td>
-      <td>https://data.kbland.kr/kbstats/wmh?tIdx=HT01&amp;t...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-  </tbody>
-</table>
-<p>4 rows × 187 columns</p>
-</div>
+```python
+raw_data.drop(raw_data.tail(4).index, inplace=True)
+```
 
 
+
+## Combining two fragmented columns into one multi-Index column
+
+The column row and the first row ~~of the data frame~~ contain the label information of the region and the region's corresponding sub-districts.
+
+These two rows will be combined into one multi-Index columns and dropped to avoid redundancy.
 
 
 ```python
@@ -399,7 +203,17 @@ bignames = pd.Series(big_col).unique().tolist()
 
 
 ```python
+print(bignames) # List of the regions
+```
+
+    ['구분', '전국', '서울', '강북\n14개구', None, '강남\n11개구', '6개광역시', '부산', '대구', '인천', '광주', '대전', '울산', '5개광역시\n(인천外)', '수도권', '세종', '경기', '수원', '성남', '고양', '안양', '부천', '의정부', '광명', '평택', '안산', '과천', '구리', '남양주', '용인', '시흥', '군포', '의왕', '하남', '오산', '파주', '이천', '안성', '김포', '양주', '동두천', '화성', '강원', '춘천', '원주', '충북', '청주', '충주', '제천', '충남', '천안', '공주', '아산', '논산', '계룡', '당진', '서산', '전북', '전주', '익산', '군산', '전남', '목포', '순천', '광양', '여수', '경북', '포항', '구미', '경산', '안동', '김천', '경남', '창원', '양산', '거제', '진주', '김해', '통영', '제주도', '제주/\n서귀포', '기타지방']
+
+Among the list of regions to be included as th column header, below three elements will be erased as they deem redundant or meaningless.
+
+```python
 bignames.remove(None)
+bignames.remove("강북\n14개구")
+bignames.remove("강남\n11개구")
 ```
 
 
@@ -418,54 +232,19 @@ for num, gu_data in enumerate(small_col):
 
 
 ```python
+# Designating raw_data's column
 raw_data.columns = [big_col, small_col]
 ```
 
 
 ```python
-raw_data.columns
-```
-
-
-
-
-    MultiIndex([(      '구분',       '구분'),
-                (      '전국',       '전국'),
-                (      '서울',       '서울'),
-                ('강북\n14개구', '강북\n14개구'),
-                ('강북\n14개구',      '강북구'),
-                ('강북\n14개구',      '광진구'),
-                ('강북\n14개구',      '노원구'),
-                ('강북\n14개구',      '도봉구'),
-                ('강북\n14개구',     '동대문구'),
-                ('강북\n14개구',      '마포구'),
-                ...
-                (      '창원',      '의창구'),
-                (      '창원',      '진해구'),
-                (      '양산',       '양산'),
-                (      '거제',       '거제'),
-                (      '진주',       '진주'),
-                (      '김해',       '김해'),
-                (      '통영',       '통영'),
-                (     '제주도',      '제주도'),
-                ('제주/\n서귀포', '제주/\n서귀포'),
-                (    '기타지방',     '기타지방')],
-               length=187)
-
-
-
-
-```python
 raw_data.drop([0,1], inplace=True)
-raw_data.drop(raw_data.tail(4).index, inplace=True)
 ```
 
 
 ```python
-raw_data.head()
+raw_data.head(2)
 ```
-
-
 
 
 <div>
@@ -474,22 +253,24 @@ raw_data.head()
         vertical-align: middle;
     }
 
+
     .dataframe tbody tr th {
         vertical-align: top;
     }
-
+    
     .dataframe thead tr th {
         text-align: left;
     }
+
 </style>
+
 <table border="1" class="dataframe">
   <thead>
     <tr>
       <th></th>
       <th>구분</th>
       <th>전국</th>
-      <th>서울</th>
-      <th colspan="7" halign="left">강북\n14개구</th>
+      <th colspan="8" halign="left">서울</th>
       <th>...</th>
       <th colspan="2" halign="left">창원</th>
       <th>양산</th>
@@ -529,10 +310,10 @@ raw_data.head()
   <tbody>
     <tr>
       <th>2</th>
-      <td>86.1</td>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.594416</td>
+      <td>86.10</td>
+      <td>27.68</td>
+      <td>23.47</td>
+      <td>32.59</td>
       <td>None</td>
       <td>None</td>
       <td>None</td>
@@ -553,82 +334,10 @@ raw_data.head()
     </tr>
     <tr>
       <th>3</th>
-      <td>2.0</td>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>3.0</td>
-      <td>27.723591</td>
-      <td>23.440488</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>4.0</td>
-      <td>27.516389</td>
-      <td>23.310982</td>
-      <td>32.436382</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>5.0</td>
-      <td>27.392068</td>
-      <td>23.116724</td>
-      <td>32.080807</td>
+      <td>2.00</td>
+      <td>27.68</td>
+      <td>23.47</td>
+      <td>32.55</td>
       <td>None</td>
       <td>None</td>
       <td>None</td>
@@ -649,12 +358,30 @@ raw_data.head()
     </tr>
   </tbody>
 </table>
-<p>5 rows × 187 columns</p>
+<p>2 rows × 187 columns</p>
+
 </div>
 
+Now the columns are nicely tidied up, the index of the data frame 
+need to be tidied up.
 
 
-## Cleansing the dataframe index into timeframe
+
+## Converting the data frame index into uniform time structure
+
+Current Index is not in a structured way as shown below. Simple string manipulation is done to match each index value into `%Y-%m-%d` format. After the manipulation is done the redundant column `(('구분', '구분'))` is dropped from the data frame.
+
+```python
+raw_data['구분']['구분'].values[:24]
+```
+
+```
+array([86.1, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+       87.1, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
+      dtype=object)
+```
+
+
 
 
 ```python
@@ -676,197 +403,7 @@ for num, raw_index in enumerate(index_list):
 
 ```python
 raw_data.set_index(pd.to_datetime(new_index), inplace=True)
-# raw_data.head()
 ```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead tr th {
-        text-align: left;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr>
-      <th></th>
-      <th>구분</th>
-      <th>전국</th>
-      <th>서울</th>
-      <th colspan="7" halign="left">강북\n14개구</th>
-      <th>...</th>
-      <th colspan="2" halign="left">창원</th>
-      <th>양산</th>
-      <th>거제</th>
-      <th>진주</th>
-      <th>김해</th>
-      <th>통영</th>
-      <th>제주도</th>
-      <th>제주/\n서귀포</th>
-      <th>기타지방</th>
-    </tr>
-    <tr>
-      <th></th>
-      <th>구분</th>
-      <th>전국</th>
-      <th>서울</th>
-      <th>강북\n14개구</th>
-      <th>강북구</th>
-      <th>광진구</th>
-      <th>노원구</th>
-      <th>도봉구</th>
-      <th>동대문구</th>
-      <th>마포구</th>
-      <th>...</th>
-      <th>의창구</th>
-      <th>진해구</th>
-      <th>양산</th>
-      <th>거제</th>
-      <th>진주</th>
-      <th>김해</th>
-      <th>통영</th>
-      <th>제주도</th>
-      <th>제주/\n서귀포</th>
-      <th>기타지방</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1986-01-01</th>
-      <td>86.1</td>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.594416</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>1986-02-01</th>
-      <td>2.0</td>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>1986-03-01</th>
-      <td>3.0</td>
-      <td>27.723591</td>
-      <td>23.440488</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>1986-04-01</th>
-      <td>4.0</td>
-      <td>27.516389</td>
-      <td>23.310982</td>
-      <td>32.436382</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <th>1986-05-01</th>
-      <td>5.0</td>
-      <td>27.392068</td>
-      <td>23.116724</td>
-      <td>32.080807</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 187 columns</p>
-</div>
-
-
 
 
 ```python
@@ -875,7 +412,7 @@ clean_data = raw_data.drop(('구분','구분'), axis = 1)
 
 
 ```python
-clean_data
+clean_data.head(2)
 ```
 
 
@@ -887,21 +424,23 @@ clean_data
         vertical-align: middle;
     }
 
+
     .dataframe tbody tr th {
         vertical-align: top;
     }
-
+    
     .dataframe thead tr th {
         text-align: left;
     }
+
 </style>
+
 <table border="1" class="dataframe">
   <thead>
     <tr>
       <th></th>
       <th>전국</th>
-      <th>서울</th>
-      <th colspan="8" halign="left">강북\n14개구</th>
+      <th colspan="9" halign="left">서울</th>
       <th>...</th>
       <th colspan="2" halign="left">창원</th>
       <th>양산</th>
@@ -941,9 +480,9 @@ clean_data
   <tbody>
     <tr>
       <th>1986-01-01</th>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.594416</td>
+      <td>27.68</td>
+      <td>23.47</td>
+      <td>32.59</td>
       <td>None</td>
       <td>None</td>
       <td>None</td>
@@ -965,9 +504,9 @@ clean_data
     </tr>
     <tr>
       <th>1986-02-01</th>
-      <td>27.68215</td>
-      <td>23.472864</td>
-      <td>32.554907</td>
+      <td>27.68</td>
+      <td>23.47</td>
+      <td>32.55</td>
       <td>None</td>
       <td>None</td>
       <td>None</td>
@@ -986,236 +525,128 @@ clean_data
       <td>None</td>
       <td>None</td>
       <td>None</td>
+    </tr>
+  </tbody>
+</table>
+<p>2 rows × 186 columns</p>
+
+</div>
+
+After all the manipulation is done with the current data frame, the data frame has a much better readability. However, in its pivot table format, it is still hard to store and filter out specific data of interest. By using the Pandas method `melt()`, it is easy to transform the data table in the desired format. In this case multi-indexed columns will be transformed to compose a value in each row under the variable name **Region** and **District**.
+
+
+```python
+clean_data2 = clean_data.melt(ignore_index = False)
+clean_data2.rename(columns = {"variable_0":"Region", "variable_1":"District"}, inplace = True)
+```
+
+Now we can filter out specific region of interest from the preprocessed data frame, in this case **서울**.
+
+
+```python
+clean_data2[clean_data2["Region"] == "서울"]
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+
+</style>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Region</th>
+      <th>District</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1986-01-01</th>
+      <td>서울</td>
+      <td>서울</td>
+      <td>23.47</td>
+    </tr>
+    <tr>
+      <th>1986-02-01</th>
+      <td>서울</td>
+      <td>서울</td>
+      <td>23.47</td>
     </tr>
     <tr>
       <th>1986-03-01</th>
-      <td>27.723591</td>
-      <td>23.440488</td>
-      <td>32.554907</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
+      <td>서울</td>
+      <td>서울</td>
+      <td>23.44</td>
     </tr>
     <tr>
       <th>1986-04-01</th>
-      <td>27.516389</td>
-      <td>23.310982</td>
-      <td>32.436382</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
+      <td>서울</td>
+      <td>서울</td>
+      <td>23.31</td>
     </tr>
     <tr>
       <th>1986-05-01</th>
-      <td>27.392068</td>
-      <td>23.116724</td>
-      <td>32.080807</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
+      <td>서울</td>
+      <td>서울</td>
+      <td>23.12</td>
     </tr>
     <tr>
       <th>...</th>
       <td>...</td>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
     </tr>
     <tr>
       <th>2022-05-01</th>
-      <td>100.768293</td>
-      <td>100.557572</td>
-      <td>100.514011</td>
-      <td>100.107569</td>
-      <td>101.29182</td>
-      <td>100.025793</td>
-      <td>100.833792</td>
-      <td>100.220039</td>
-      <td>100.240308</td>
-      <td>100.042269</td>
-      <td>...</td>
-      <td>101.60097</td>
-      <td>102.027125</td>
-      <td>None</td>
-      <td>None</td>
-      <td>102.017169</td>
-      <td>100.116237</td>
-      <td>None</td>
-      <td>None</td>
-      <td>100.949068</td>
-      <td>101.267352</td>
+      <td>서울</td>
+      <td>영등포구</td>
+      <td>100.48</td>
     </tr>
     <tr>
       <th>2022-06-01</th>
-      <td>100.868527</td>
-      <td>100.723141</td>
-      <td>100.673584</td>
-      <td>100.170506</td>
-      <td>101.431506</td>
-      <td>99.931069</td>
-      <td>100.927532</td>
-      <td>100.279169</td>
-      <td>100.498788</td>
-      <td>100.622097</td>
-      <td>...</td>
-      <td>102.668235</td>
-      <td>102.383504</td>
-      <td>None</td>
-      <td>None</td>
-      <td>102.557368</td>
-      <td>100.108882</td>
-      <td>None</td>
-      <td>None</td>
-      <td>101.229909</td>
-      <td>101.491416</td>
+      <td>서울</td>
+      <td>영등포구</td>
+      <td>100.71</td>
     </tr>
     <tr>
       <th>2022-07-01</th>
-      <td>100.868825</td>
-      <td>100.79044</td>
-      <td>100.717396</td>
-      <td>100.324139</td>
-      <td>101.669564</td>
-      <td>99.938522</td>
-      <td>100.861091</td>
-      <td>100.143208</td>
-      <td>100.727687</td>
-      <td>100.656617</td>
-      <td>...</td>
-      <td>102.749177</td>
-      <td>102.574134</td>
-      <td>None</td>
-      <td>None</td>
-      <td>102.740061</td>
-      <td>100.034374</td>
-      <td>None</td>
-      <td>None</td>
-      <td>101.257225</td>
-      <td>101.619213</td>
+      <td>서울</td>
+      <td>영등포구</td>
+      <td>100.90</td>
     </tr>
     <tr>
       <th>2022-08-01</th>
-      <td>100.727588</td>
-      <td>100.719434</td>
-      <td>100.615015</td>
-      <td>100.398038</td>
-      <td>101.594999</td>
-      <td>99.629556</td>
-      <td>100.465284</td>
-      <td>100.111988</td>
-      <td>100.677197</td>
-      <td>100.590581</td>
-      <td>...</td>
-      <td>102.802054</td>
-      <td>102.661817</td>
-      <td>None</td>
-      <td>None</td>
-      <td>102.77765</td>
-      <td>99.842323</td>
-      <td>None</td>
-      <td>None</td>
-      <td>101.270875</td>
-      <td>101.635685</td>
+      <td>서울</td>
+      <td>영등포구</td>
+      <td>100.96</td>
     </tr>
     <tr>
       <th>2022-09-01</th>
-      <td>100.56764</td>
-      <td>100.6413</td>
-      <td>100.50832</td>
-      <td>100.419848</td>
-      <td>101.684775</td>
-      <td>99.09902</td>
-      <td>100.270399</td>
-      <td>99.968764</td>
-      <td>100.688271</td>
-      <td>100.680763</td>
-      <td>...</td>
-      <td>102.743905</td>
-      <td>102.726283</td>
-      <td>None</td>
-      <td>None</td>
-      <td>102.611773</td>
-      <td>99.621415</td>
-      <td>None</td>
-      <td>None</td>
-      <td>101.351286</td>
-      <td>101.591573</td>
+      <td>서울</td>
+      <td>영등포구</td>
+      <td>100.94</td>
     </tr>
   </tbody>
 </table>
-<p>441 rows × 186 columns</p>
+<p>12348 rows × 3 columns</p>
+
 </div>
 
-
-
-
-```python
-clean_data.to_csv('output_data.csv', header=True, encoding = 'utf-8-sig')
-```
-
-
-```python
-
-```
+(The End)
