@@ -186,7 +186,7 @@ raw_data.drop(raw_data.tail(4).index, inplace=True)
 
 ## Combining two fragmented columns into one multi-Index column
 
-The column row and the first row ~~of the data frame~~ contain the label information of the region and the region's corresponding sub-districts.
+The column row and the first row contain the label information of the region and the region's corresponding sub-districts.
 
 These two rows will be combined into one multi-Index columns and dropped to avoid redundancy.
 
